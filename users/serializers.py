@@ -8,6 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'email', 'first_name', 'last_name', 'phone_number', 'user_type']
+        read_only_fields = ('id', 'date_joined')
 
 
 class PassengerSerializer(serializers.ModelSerializer):
@@ -37,15 +38,23 @@ class RiderSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'average_rating', 'total_rides', 'total_earnings', 'created_at', 'updated_at']
 
 
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-    password2 = serializers.CharField(write_only=True)
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password2 = serializers.CharField(write_only=True, required=True)
 
-    def validate(self, data):
-        if data['password'] != data['password2']:
+    class Meta:
+        model = User
+        fields = ('email', 'password', 'password2', 'first_name', 'last_name', 'phone_number', 'user_type')
+        extra_kwargs = {
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+        }
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({'password': 'Passwords dont match'})
-        validate_password(data['password]'])
-        return data
+        validate_password(attrs['password]'])
+        return attrs
 
     def create(self, validated_data):
         validated_data.pop("password2")
