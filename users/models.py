@@ -10,7 +10,6 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 
 
-
 class CustomUserManager(BaseUserManager):
     """
     Custom user model manager where email is the unique identifier
@@ -41,7 +40,6 @@ class CustomUserManager(BaseUserManager):
         if not extra_fields.get('is_superuser'):
             raise ValueError('Superuser must have is_superuser=True.')
         return self.create_user(email, password, **extra_fields)
-
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -84,13 +82,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
-
 PREFERRED_PAYMENT_METHODS = (
     ('momo', 'Momo'),
     ('cash', 'Cash'),
     ('card', 'Card'),
 )
 # TODO: Complete the Passenger model implementation
+
+
 class Passenger(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='passenger_profile')
     passenger_id = models.CharField(max_length=10, unique=True)
@@ -104,15 +103,12 @@ class Passenger(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
     def __str__(self):
         return f"Passenger: {self.user.email}"
-
 
     def clean(self):
         if self.user.user_type != 'passenger':
             raise ValidationError('User is not a passenger')
-
 
     def save(self, *args, **kwargs):
         self.clean()
@@ -127,6 +123,8 @@ VERIFICATION_STATUS_CHOICES = (
 )
 
 #  TODO: Complete the Rider model implementation
+
+
 class Rider(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='rider_profile')
     profile_picture = models.ImageField(upload_to='rider_profile_pictures/', null=True, blank=True)
@@ -145,7 +143,3 @@ class Rider(models.Model):
 
     def __str__(self):
         return f"Rider: {self.user.email}"
-
-
-
-
