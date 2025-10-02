@@ -1,8 +1,13 @@
 from django.shortcuts import render
 from django.core.cache import cache
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework_simplejwt.token import RefreshToken
+from .serializers import UserRegistrationSerializer, UserSerializer
+from drf_spectacular.utils import extend_schema
+from rest_framework.permissions import AllowAny
+
 
 from users.models import User, Passenger, Rider
 from users.serializers import UserSerializer, PassengerSerializer, RiderSerializer
@@ -147,5 +152,29 @@ class RiderViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(rider)
         return Response(serializer.data)
+
+class RegisterView(generics.CreateAPIView):
+    serializer_class = UserRegistrationSerializer
+    permission_classes = [AllowAny]
+    @extend_schema(summary = "Register New User", Description = "Create a New user account and recieve JWT token")
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data = request.data)
+        serializer.is_valid(raise_exception=True )
+        user = serializer.save()
+        
+        refresh = RefreshToken.for_user(user)
+        
+        return Response({
+            'user': UserSerializer(user).data,
+            'tokens':{
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                },
+            'message': "user registerd successful"
+            
+        }, status=status.HTTP_201_CREATED)
+
+
 
 
